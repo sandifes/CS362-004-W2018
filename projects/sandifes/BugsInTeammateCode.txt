@@ -1,0 +1,192 @@
+Stuart Sandifer
+CS 362
+Assignment 5
+3/4/18
+
+Bug-Reports
+Bug reports are from teammate: massonit
+https://github.com/sandifes/CS362-004-W2018/tree/sandifes-assignment-5/projects/sandifes/massonit
+Bug 1:
+Title: Smithy cardtest4 received received signal SIGABRT on cardtest assertions.
+Product: SIGABRT occurred when running my cardtest4 on massonit's dominion.c.
+Classification: The error caused the execution of cardtest4 to abort, completely stopping the testing process.
+Description: 
+cardtest4.c aborted on line 37:
+assert(G.handCount[playerA] == originalG.handCount[playerA] + 2);
+due to a bug in the dominion.c code of massonit in the function smithyimplementation(), where 
+drawCard() is only called twice for the Smithy card, when it should have drawn 3 cards.  This caused the assertion above to fail.
+
+Bug 2:
+Title: discard values not changing when cardtest1.c is run to test Adventurer.
+Product: When cardtest1.c is run, the cards that are in the player's hand are not random.  These cards were drawn from drawCard() in massonit's dominion.c.
+Classification: The fact that the cards are always coming up 4,4,1,4,4, and then all subsequent drawCard() calls are all returning 4, invalidates the random nature needed for a card game.
+Description: 
+cardtest1.c is supposed to measure the correctness of the function adventurerimplementation(), but does not because each time cardtest is run, the same hand of cards is produced and the same additionally drawn cards are produced.
+
+
+Debugging
+Bug 1: I used gdb as follows to run cardtest4 on dominion.c.  I used gdb to monitor state->handCount[0] to observe changes and determine if there were any bugs.  I saw that the hand count went from 0 to 5 when the initial hand was dealt.  Then when cardEffect() was called on the smithy card, two cards were drawn and the hand count was incremented twice (state->handCount[player]++) and one was discarded (state->handCount[currentPlayer]--).  This was a result of the code of dominion.c in function smithyimplementation() on line 1176 "for (i = 1; i < 3; i++)" incrementing twice instead of three times:
+* (gdb) break initializeGame
+* Breakpoint 1 at 0x40124e: file dominion.c, line 44.
+* (gdb) break cardEffect
+* Breakpoint 2 at 0x4034a3: file dominion.c, line 652.
+* (gdb) run
+* Starting program: /nfs/stak/users/sandifes/CS362-004-W2018/projects/a5a/cardtest4
+* ***** CARD TEST: SMITHY *****
+* Breakpoint 1, initializeGame (numPlayers=2, kingdomCards=0x7fffffff0d90, randomSeed=1000,
+* state=0x7fffffff7480) at dominion.c:44
+* 44        SelectStream(1);
+* Missing separate debuginfos, use: debuginfo-install glibc-2.17-196.el7_4.2.x86_64
+* (gdb) bt
+* #0  initializeGame (numPlayers=2, kingdomCards=0x7fffffff0d90, randomSeed=1000,
+
+* state=0x7fffffff7480)
+* at dominion.c:44
+* #1  0x0000000000406478 in main () at cardtest4.c:31
+* (gdb) print state->whoseTurn
+* $1 = 0
+* (gdb) print state->discardCount[player]
+* No symbol "player" in current context.
+* (gdb) print state->discardCount[playerA]
+* No symbol "playerA" in current context.
+* (gdb) print state->discardCount[0]
+* $2 = 0
+* (gdb) print state->deckCount[0]
+* $3 = 0
+* (gdb) print state->handCount[0]
+* $4 = 0
+* (gdb) watch state->handCount[0]
+* Hardware watchpoint 3: state->handCount[0]
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 3: state->handCount[0]
+
+* Old value = 0
+* New value = 1
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 3: state->handCount[0]
+
+* Old value = 1
+* New value = 2
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 3: state->handCount[0]
+
+* Old value = 2
+* New value = 3
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 3: state->handCount[0]
+
+* Old value = 3
+* New value = 4
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 3: state->handCount[0]
+* Old value = 4
+* New value = 5
+
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+
+* Watchpoint 3 deleted because the program has left the block in
+* which its expression is valid.
+* 0x0000000000406478 in main () at cardtest4.c:31
+* 31          initializeGame(numPlayers, k, seed, &G);
+* (gdb) continue
+* Continuing.
+
+* Breakpoint 2, cardEffect (card=13, choice1=0, choice2=0, choice3=0, state=0x7fffffff7480, handPos=0,
+* bonus=0x7fffffff0dbc) at dominion.c:652
+* 652       int r = 0;
+* (gdb) print state->whoseTurn
+* $5 = 0
+* (gdb) print state->discardCount[0]
+* $6 = 0
+* (gdb) print state->deckCount[0]
+* $7 = 5
+* (gdb) print state->handCount[0]
+* $8 = 5
+* (gdb) watch state->handCount[0]
+* Hardware watchpoint 4: state->handCount[0]
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 4: state->handCount[0]
+
+* Old value = 5
+* New value = 6
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 4: state->handCount[0]
+
+* Old value = 6
+* New value = 7
+* 0x00000000004030fd in drawCard (player=0, state=0x7fffffff7480) at dominion.c:577
+* 577         state->handCount[player]++;//Increment hand count
+* (gdb) continue
+* Continuing.
+* Hardware watchpoint 4: state->handCount[0]
+
+* Old value = 7
+* New value = 6
+* 0x0000000000405fbf in discardCard (handPos=0, currentPlayer=0, state=0x7fffffff7480, trashFlag=0)
+* at dominion.c:1287
+* 1287          state->handCount[currentPlayer]--;
+* (gdb) continue
+* Continuing.
+
+* Watchpoint 4 deleted because the program has left the block in
+* which its expression is valid.
+* main () at cardtest4.c:37
+* 37          assert(G.handCount[playerA] == originalG.handCount[playerA] + 2);
+* (gdb) print state->handCount[0]
+* Attempt to extract a component of a value that is not a structure pointer.
+* (gdb) continue
+* Continuing.
+* cardtest4: cardtest4.c:37: main: Assertion `G.handCount[playerA] == originalG.handCount[playerA] +
+
+* 2' failed.
+* Program received signal SIGABRT, Aborted.
+* 0x00007ffff774b1f7 in raise () from /lib64/libc.so.6
+
+Bug 2: I also ran gdb to test cardtest1 on dominion.c.  In this case, I did not see anything out of the ordinary at first and the expected results were achieved from the card test.  However, upon further investigation, I noticed that state->discard[0][ state->discardCount[0]] was never changing.  I then added printf statements to adventurerimplementation() and then to drawCard(), until I was able to determine that the same cards were being drawn every time, and that it was drawing coppers over and over and that the initial hand drawn was always exactly this:
+DRAW CARD: 4
+DRAW CARD: 4
+DRAW CARD: 1
+DRAW CARD: 4
+DRAW CARD: 4
+And any additional cards were all coppers:
+DRAW CARD: 4
+DRAW CARD: 4
+DRAW CARD: 4
+DRAW CARD: 4
+DRAW CARD: 4
+The code changes that I used to test this were:
+* In drawCard(): printf("\nDRAW CARD: %d\n", state->hand[player][count]);
+* In adventurerimplementation(): printf("\n\nCARD DRAWN: %d\n", cardDrawn);
+
+
+Test-Report
+After reviewing and running tests on my teammates refactored code, I found that overall Tiara did a good job with the refactor and her card functions.  However, the issue with the smithy card function should have been corrected.  
+The functions were set up similarly to the way I set up mine - with function calls within the switch statement of cardEffect.  This made if very easy to run my unit and random tests.  I did not have to change my test code at all in order to get useful results from gdb.  For the most part, they worked as expected, and it took me a while to find a second bug.  
+
+My unit tests were designed to call cardEffect, to make sure the code was being fully executed.  This was by design, to make sure the code could be tested regardless of the refactor.  It also limited the use of functions to initializeGame and cardEffect in both the card tests and random tests, so that the results produced by each test would be simple and clear.  This was the case, and it made my work much easier to understand.
+
+Each of my test cases, including the unit tests, card tests, and random tests were all run and tested for coverage.  Coverage was quite good in each case.   All tests achieved 100% coverage except for cardtest1.c:
+Function 'adventurerimplementation'
+Lines executed:62.50% of 16
+The random tests thoroughly tested the boundaries of the different aspects of the game state and came across with no problems.  It was my expectation that the tests would work such as they did, as the refactor was simple and easy to follow.  Overall I believe that the test results were accurate and useful.
+

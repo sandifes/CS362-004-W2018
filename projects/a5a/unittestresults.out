@@ -1,0 +1,99 @@
+         ***** Unit test of gainCard() *****
+Testing gainCard(): discard a copper...
+Testing gainCard(): add a copper to deck...
+Testing gainCard() add a copper to hand...
+Check that copper supply count was reduced by 3...
+Copper count: 7
+Expected copper count: 7
+Testing gainCard(): set copper supply to zero, should return -1...
+
+
+***gainCard() TEST COMPLETED SUCCESSFULLY ***
+
+         ***** Unit test of shuffle() *****
+
+Test number 1  (Estates = 1, Coppers = 4):
+Deck before...
+1 1 4 4 4 4 4 1 4 4 
+Deck after...
+4 4 4 1 1 4 4 1 4 4 
+
+Test number 2  (Estates = 1, Coppers = 4):
+Deck before...
+4 4 4 1 1 4 4 1 4 4 
+Deck after...
+1 4 4 4 1 4 4 1 4 4 
+
+Test number 3  (Estates = 1, Coppers = 4):
+Deck before...
+1 4 4 4 1 4 4 1 4 4 
+Deck after...
+4 1 1 4 4 4 4 1 4 4 
+
+
+AND, If the deck size is 0, shuffle should return -1
+ 
+
+***shuffle() TEST COMPLETED SUCCESSFULLY***
+
+         ***** Unit test of isGameOver() *****
+
+isGameOver() returns a value of 1 if true
+
+First check that initialize has populated all supply counts...
+
+Test by setting the number of province cards to zero...
+
+Test by setting any 3 supply piles to empty...
+
+
+***isGameOver() TEST SUCCESSFULLY COMPLETED ***
+
+         ***** Unit test of initializeGame() *****
+After initialization, Player 0 should have 5 cards in hand and 5 cards in the draw pile.
+Player 0 deck count: 5
+Player 0 hand count: 5
+Player 0 discard count: 0
+
+Check supply counts...
+
+Set the number of players to 10, function should return -1...
+
+Set two kingdom cards the same, function should return -1...
+
+
+***initializeGame() TEST SUCCESSFULLY COMPLETED ***
+
+       ***** CARD TEST: ADVENTURER *****
+Player 0 plays adventurer and gains 2 cards...
+Hand count: 7
+Expected hand count: 7
+
+Checking that Player 0 gained 2 treasure cards...
+
+Original treasure: 4
+Treasure after playing adventurer: 6
+
+Player 1 hand count should be unchanged...
+Hand count: 0
+Expected hand count: 0
+
+Player 1 deck count should be unchanged... 
+Deck count before: 10
+Deck count after: 10
+
+Checking Kingdom Card Piles...
+
+Checking Victory Card Piles...
+
+***ADVENTURER TEST COMPLETED SUCCESSFULLY***
+
+       ***** CARD TEST: VILLAGE *****
+Player 0 plays village and draws 1 card, gains 2 actions, and discards the village...
+Hand count: 5
+Expected hand count: 5
+
+Player 0 deck count before: 5
+Deck count after: 4
+Expected deck count after: 4
+
